@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grade 7 Science Midterm Quiz</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        }
+        .quiz-container {
+            transition: opacity 0.5s ease-in-out;
+        }
+        .option-btn {
+            transition: all 0.2s ease;
+        }
+        .option-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        .correct {
+            background-color: #22c55e !important;
+            color: white !important;
+            border-color: #16a34a !important;
+        }
+        .incorrect {
+            background-color: #ef4444 !important;
+            color: white !important;
+            border-color: #dc2626 !important;
+        }
+        .hint-tooltip {
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .hint-icon:hover .hint-tooltip {
+            visibility: visible;
+            opacity: 1;
+        }
+        #progress-bar-inner {
+            transition: width 0.5s ease-out;
+        }
+        .visual-container {
+            min-height: 250px;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+
+    <div id="quiz-app" class="w-full max-w-4xl mx-auto">
+
+        <!-- Start Screen -->
+        <div id="start-screen" class="text-center bg-white p-8 sm:p-12 rounded-2xl shadow-2xl">
+            <h1 class="text-3xl sm:text-4xl font-bold text-gray-800">Science Midterm Quiz</h1>
+            <p class="text-lg text-gray-600 mt-2">SMBP 1.4, Term 1, 2025</p>
+            <p class="text-md text-gray-500 mt-4">Teacher: MD Showket Hasan (T. Hasan)</p>
+            <p class="text-md text-gray-500">Duration: 60 minutes (self-paced)</p>
+            <button id="start-btn" class="mt-8 bg-indigo-600 text-white font-bold py-3 px-10 rounded-full text-lg hover:bg-indigo-700 transition-transform transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-indigo-300">
+                Start Quiz
+            </button>
+        </div>
+
+        <!-- Quiz Container -->
+        <div id="quiz-container" class="hidden">
+            <div class="bg-white p-6 sm:p-8 rounded-2xl shadow-2xl">
+                <!-- Header -->
+                <div class="flex justify-between items-center mb-4">
+                    <p id="section-title" class="text-sm font-semibold text-indigo-600 bg-indigo-100 py-1 px-3 rounded-full">Section</p>
+                    <p id="question-counter" class="text-sm font-semibold text-gray-600">Question 1/35</p>
+                </div>
+
+                <!-- Progress Bar -->
+                <div class="w-full bg-gray-200 rounded-full h-2.5 mb-6">
+                    <div id="progress-bar-inner" class="bg-indigo-600 h-2.5 rounded-full" style="width: 0%"></div>
+                </div>
+
+                <!-- Visual Aid Container -->
+                <div id="visual-container" class="visual-container mb-6 bg-gray-50 rounded-xl p-4 flex items-center justify-center">
+                    <!-- Visuals will be injected here -->
+                </div>
+
+                <!-- Question Text -->
+                <div class="flex items-start">
+                    <p id="question-text" class="text-xl sm:text-2xl font-semibold text-gray-800 flex-grow">Question text goes here...</p>
+                    <div class="relative hint-icon ml-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-gray-400 hover:text-indigo-500 cursor-pointer" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <div class="hint-tooltip absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 bg-gray-800 text-white text-sm rounded-lg p-3 shadow-lg z-10">
+                            <p id="hint-en" class="font-semibold"></p>
+                            <p id="hint-th" class="mt-1"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Options -->
+                <div id="options-container" class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Options will be injected here -->
+                </div>
+
+                <!-- Next Button -->
+                <div class="flex justify-end mt-8">
+                    <button id="next-btn" class="hidden bg-gray-800 text-white font-bold py-2 px-8 rounded-full hover:bg-gray-900 transition">Next</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Screen -->
+        <div id="results-screen" class="hidden text-center bg-white p-8 sm:p-12 rounded-2xl shadow-2xl">
+            <h2 class="text-3xl font-bold text-gray-800">Quiz Complete!</h2>
+            <p class="text-lg text-gray-600 mt-4">Your final score is:</p>
+            <p id="final-score" class="text-6xl font-bold text-indigo-600 my-4">0/35</p>
+            <p id="score-message" class="text-xl text-gray-700"></p>
+            <button id="restart-btn" class="mt-8 bg-indigo-600 text-white font-bold py-3 px-10 rounded-full text-lg hover:bg-indigo-700 transition-transform transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-indigo-300">
+                Restart Quiz
+            </button>
+        </div>
+    </div>
+
+<script>
+// --- QUIZ DATA AND VISUALS ---
+const quizData = [
+    // Section 1: Knowledge Checking
+    { section: "Knowledge Checking", question: "Which state of matter has particles that are very far apart and move very fast?", options: ["Solid", "Liquid", "Gas", "Colloid"], answer: "Gas", hint_en: "Think about which state fills any container it is in.", hint_th: "ลองนึกดูว่าสถานะใดที่บรรจุในภาชนะใดก็ได้", visual: 'statesOfMatter' },
+    { section: "Knowledge Checking", question: "What is the name of the process when a gas cools down and turns into a liquid?", options: ["Evaporation", "Condensation", "Melting", "Freezing"], answer: "Condensation", hint_en: "Think about water drops forming on a cold glass.", hint_th: "นึกถึงหยดน้ำที่เกาะบนแก้วน้ำเย็น", visual: 'condensation' },
+    { section: "Knowledge Checking", question: "Which organelle is known as the 'control center' of the cell because it contains the DNA?", options: ["Mitochondrion", "Cytoplasm", "Nucleus", "Vacuole"], answer: "Nucleus", hint_en: "This part is like the 'brain' of the cell.", hint_th: "ส่วนนี้เปรียบเสมือน 'สมอง' ของเซลล์", visual: 'nucleus' },
+    { section: "Knowledge Checking", question: "What is the main job of the ribosomes in a cell?", options: ["To make energy", "To make proteins", "To store water", "To digest waste"], answer: "To make proteins", hint_en: "These are like small factories inside the cell.", hint_th: "สิ่งเหล่านี้เปรียบเสมือนโรงงานเล็กๆ ภายในเซลล์", visual: 'animalCell' },
+    { section: "Knowledge Checking", question: "Which statement about non-metals is INCORRECT?", options: ["They are poor conductors of electricity.", "They are often brittle.", "Many are gases at room temperature.", "They are shiny and malleable."], answer: "They are shiny and malleable.", hint_en: "Read all four choices. Three of them are true about non-metals. Find the one that is false.", hint_th: "อ่านตัวเลือกทั้งสี่ข้อ สามข้อเป็นจริงเกี่ยวกับอโลหะ หาข้อที่เป็นเท็จ", visual: 'periodicTable' },
+    { section: "Knowledge Checking", question: "The rigid, strong outer layer of a plant cell is called the...", options: ["Cell membrane", "Cytoplasm", "Cell wall", "Nucleus"], answer: "Cell wall", hint_en: "This part gives a plant cell its square shape and is not found in animal cells.", hint_th: "ส่วนนี้ทำให้เซลล์พืชมีรูปร่างเป็นสี่เหลี่ยมและไม่พบในเซลล์สัตว์", visual: 'plantVsAnimal' },
+    { section: "Knowledge Checking", question: "Which type of mixture has visible particles that can settle down over time?", options: ["Solution", "Suspension", "Colloid", "Compound"], answer: "Suspension", hint_en: "Think about what happens when you mix sand and water.", hint_th: "ลองนึกดูว่าจะเกิดอะไรขึ้นเมื่อผสมทรายกับน้ำ", visual: 'suspension' },
+    { section: "Knowledge Checking", question: "The heat energy needed to change a liquid into a gas is called...", options: ["Latent heat of fusion", "Latent heat of vaporization", "Melting point", "Freezing point"], answer: "Latent heat of vaporization", hint_en: "This is a special type of 'latent heat' for boiling.", hint_th: "นี่คือ 'ความร้อนแฝง' ชนิดพิเศษสำหรับการเดือด", visual: 'boilingGraph' },
+    { section: "Knowledge Checking", question: "Which organelle is responsible for photosynthesis in a plant cell?", options: ["Mitochondrion", "Chloroplast", "Ribosome", "Lysosome"], answer: "Chloroplast", hint_en: "This part is green and uses sunlight to make food.", hint_th: "ส่วนนี้มีสีเขียวและใช้แสงแดดสร้างอาหาร", visual: 'chloroplast' },
+    { section: "Knowledge Checking", question: "Look at the following statements about matter.<br>1. In a solid, particles vibrate in fixed positions.<br>2. A compound is a pure substance.<br>3. Solutions are heterogeneous mixtures.<br>4. The change from a gas to a liquid is called evaporation.<br><br>How many statements are correct?", options: ["1 statement", "2 statements", "3 statements", "4 statements"], answer: "2 statements", hint_en: "Read each sentence one by one and decide if it is true or false. Then, count how many are true.", hint_th: "อ่านแต่ละประโยคแล้วตัดสินใจว่าจริงหรือเท็จ จากนั้นนับว่ามีกี่ข้อที่เป็นจริง", visual: 'textOnly' },
+
+    // Section 2: True or False
+    { section: "True or False", question: "The cell membrane controls what enters and leaves the cell.", options: ["True", "False"], answer: "True", hint_en: "Think about the job of a gate or a door.", hint_th: "นึกถึงหน้าที่ของประตู", visual: 'plantVsAnimal' },
+    { section: "True or False", question: "All mixtures boil at one single, fixed temperature.", options: ["True", "False"], answer: "False", hint_en: "Remember the difference between pure water and salt water when they boil.", hint_th: "จำความแตกต่างระหว่างน้ำบริสุทธิ์กับน้ำเกลือเมื่อเดือด", visual: 'boilingGraph' },
+    { section: "True or False", question: "The Mitochondrion is the 'powerhouse' of the cell because it produces energy.", options: ["True", "False"], answer: "True", hint_en: "'Powerhouse' is another word for a place that makes energy.", hint_th: "‘โรงไฟฟ้า’ เป็นอีกคำหนึ่งของสถานที่สร้างพลังงาน", visual: 'animalCell' },
+    { section: "True or False", question: "Freezing and melting happen at different temperatures for the same pure substance.", options: ["True", "False"], answer: "False", hint_en: "Think about ice turning to water and water turning to ice. At what temperature does this happen?", hint_th: "นึกถึงน้ำแข็งที่เปลี่ยนเป็นน้ำและน้ำที่เปลี่ยนเป็นน้ำแข็ง สิ่งนี้เกิดขึ้นที่อุณหภูมิเท่าไหร่", visual: 'boilingGraph' },
+    { section: "True or False", question: "A colloid, like milk, can scatter a beam of light passing through it.", options: ["True", "False"], answer: "True", hint_en: "This special effect has a name: the Tyndall effect.", hint_th: "ปรากฏการณ์พิเศษนี้มีชื่อว่า ปรากฏการณ์ทินดอลล์", visual: 'tyndall' },
+
+    // Section 3: Matching
+    { section: "Matching", question: "I am a mixture that looks clear, and my particles are too small to be seen, like sugar in water.", options: ["Suspension", "Solution", "Colloid", "Element"], answer: "Solution", hint_en: "This is a homogeneous mixture.", hint_th: "นี่คือสารเนื้อเดียว", visual: 'tyndall' },
+    { section: "Matching", question: "I am the organelle that stores, packages, and transports things made in the ER.", options: ["Ribosome", "Lysosome", "Golgi body", "Nucleus"], answer: "Golgi body", hint_en: "I am like the 'post office' of the cell.", hint_th: "ฉันเปรียบเสมือน 'ที่ทำการไปรษณีย์' ของเซลล์", visual: 'animalCell' },
+    { section: "Matching", question: "I am the change of state directly from a solid to a gas, without becoming a liquid.", options: ["Sublimation", "Deposition", "Condensation", "Evaporation"], answer: "Sublimation", hint_en: "Think about how dry ice or mothballs disappear.", hint_th: "นึกถึงว่าน้ำแข็งแห้งหรือลูกเหม็นหายไปได้อย่างไร", visual: 'sublimation' },
+    { section: "Matching", question: "I am a type of element that has properties of both metals and non-metals.", options: ["Compound", "Mixture", "Metalloid", "Liquid"], answer: "Metalloid", hint_en: "Silicon is a famous example.", hint_th: "ซิลิคอนเป็นตัวอย่างที่มีชื่อเสียง", visual: 'periodicTable' },
+    { section: "Matching", question: "I am a large sac in a plant cell that stores water and helps keep the cell firm.", options: ["Vacuole", "Mitochondrion", "Chloroplast", "Lysosome"], answer: "Vacuole", hint_en: "This is usually the biggest organelle in a plant cell.", hint_th: "นี่เป็นออร์แกเนลล์ที่ใหญ่ที่สุดในเซลล์พืช", visual: 'plantCell' },
+
+    // Section 4: Error Identification
+    { section: "Error Identification", question: "Which statement about solids is NOT true?", options: ["Particles are packed very close together.", "Particles can move freely past each other.", "They have a fixed shape.", "The forces between particles are very strong."], answer: "Particles can move freely past each other.", hint_en: "Look for the description that does not match a solid like a rock or a book.", hint_th: "มองหาคำอธิบายที่ไม่ตรงกับของแข็ง เช่น หินหรือหนังสือ", visual: 'statesOfMatter' },
+    { section: "Error Identification", question: "Which sentence about the difference between plant and animal cells is WRONG?", options: ["Plant cells have a cell wall, but animal cells do not.", "Plant cells have chloroplasts, but animal cells do not.", "Animal cells have a large central vacuole, but plant cells have small ones.", "Both plant and animal cells have a cell membrane."], answer: "Animal cells have a large central vacuole, but plant cells have small ones.", hint_en: "One of these statements mixes up the facts about the two cell types.", hint_th: "หนึ่งในข้อความเหล่านี้สับสนข้อเท็จจริงเกี่ยวกับเซลล์ทั้งสองชนิด", visual: 'plantVsAnimal' },
+    { section: "Error Identification", question: "Which of these is NOT a physical property of matter?", options: ["Color", "Density", "Flammability (how easily it burns)", "Melting point"], answer: "Flammability (how easily it burns)", hint_en: "A physical property can be seen without changing the substance. One of these changes the substance.", hint_th: "สมบัติทางกายภาพสามารถมองเห็นได้โดยไม่เปลี่ยนแปลงสาร หนึ่งในนั้นคือการเปลี่ยนแปลงสาร", visual: 'textOnly' },
+    { section: "Error Identification", question: "All of these are examples of mixtures, EXCEPT one. Which one is NOT a mixture?", options: ["Air", "Salt water", "Muddy water", "Pure gold"], answer: "Pure gold", hint_en: "A mixture has two or more substances not chemically joined. One option is a pure substance.", hint_th: "สารผสมมีสารตั้งแต่สองชนิดขึ้นไปที่ไม่ได้รวมกันทางเคมี หนึ่งในตัวเลือกคือสารบริสุทธิ์", visual: 'textOnly' },
+    { section: "Error Identification", question: "Which statement about the Endoplasmic Reticulum (ER) is INCORRECT?", options: ["The Rough ER has ribosomes on it.", "The Smooth ER makes lipids.", "The ER is the control center of the cell.", "It is a network of membranes."], answer: "The ER is the control center of the cell.", hint_en: "One statement describes the ER incorrectly.", hint_th: "ข้อความหนึ่งอธิบาย ER ไม่ถูกต้อง", visual: 'animalCell' },
+
+    // Section 5: What is it?
+    { section: "What is it?", question: "This is a characteristic of a substance that can only be observed when it changes into a new substance, like its ability to rust.", options: ["Chemical property", "State of matter", "Mixture property", "Density"], answer: "Chemical property", hint_en: "This is the opposite of a physical property.", hint_th: "นี่คือสิ่งที่ตรงกันข้ามกับสมบัติทางกายภาพ", visual: 'textOnly' },
+    { section: "What is it?", question: "This is the jelly-like substance that fills the inside of a cell and holds all the organelles.", options: ["Nucleus", "Cytoplasm", "Cell wall", "Vacuole"], answer: "Cytoplasm", hint_en: "It is the 'sea' where all the 'islands' (organelles) float.", hint_th: "มันคือ 'ทะเล' ที่ 'เกาะ' ทั้งหมด (ออร์แกเนลล์) ลอยอยู่", visual: 'animalCell' },
+    { section: "What is it?", question: "This is a property of metals that allows them to be made into thin wires.", options: ["Malleability", "Ductility", "Conductivity", "Brittleness"], answer: "Ductility", hint_en: "It starts with the letter 'D'.", hint_th: "ขึ้นต้นด้วยตัวอักษร 'D'", visual: 'periodicTable' },
+    { section: "What is it?", question: "This is the process where a liquid on the surface turns into a gas without boiling, like a puddle drying in the sun.", options: ["Evaporation", "Condensation", "Deposition", "Freezing"], answer: "Evaporation", hint_en: "This is how wet clothes get dry.", hint_th: "นี่คือวิธีที่เสื้อผ้าเปียกแห้ง", visual: 'textOnly' },
+    { section: "What is it?", question: "This organelle contains digestive enzymes to break down old cell parts and waste.", options: ["Ribosome", "Golgi body", "Lysosome", "Mitochondrion"], answer: "Lysosome", hint_en: "It's like the 'stomach' or 'recycling center' of the cell.", hint_th: "มันเปรียบเสมือน 'กระเพาะอาหาร' หรือ 'ศูนย์รีไซเคิล' ของเซลล์", visual: 'animalCell' },
+
+    // Section 6: Application and Analysis
+    { section: "Application and Analysis", question: "Use the graph above to answer questions 31-33.<br><br>What is the boiling point of Liquid A?", options: ["60°C", "100°C", "102°C", "120°C"], answer: "100°C", hint_en: "Look for the temperature where the line for Liquid A becomes flat.", hint_th: "มองหาอุณหภูมิที่เส้นกราฟของของเหลว A กลายเป็นแนวราบ", visual: 'boilingGraph' },
+    { section: "Application and Analysis", question: "Which liquid is a mixture?", options: ["Liquid A", "Liquid B", "Both are mixtures", "Both are pure substances"], answer: "Liquid B", hint_en: "Remember that a mixture boils over a range of temperatures, not at a single, fixed point.", hint_th: "จำไว้ว่าสารผสมเดือดในช่วงอุณหภูมิหนึ่ง ไม่ใช่ที่จุดคงที่จุดเดียว", visual: 'boilingGraph' },
+    { section: "Application and Analysis", question: "At 4 minutes, what is the state of Liquid A?", options: ["It is only a solid.", "It is only a liquid.", "It is changing from a liquid to a gas.", "It is only a gas."], answer: "It is changing from a liquid to a gas.", hint_en: "At 4 minutes, the temperature of Liquid A is flat at its boiling point. What happens during boiling?", hint_th: "ที่ 4 นาที อุณหภูมิของของเหลว A คงที่ที่จุดเดือด จะเกิดอะไรขึ้นระหว่างการเดือด", visual: 'boilingGraph' },
+    { section: "Application and Analysis", question: "Use the table above to answer questions 34 and 35.<br><br>Which substance is a metal?", options: ["Substance W", "Substance X", "Substance Y", "Substance Z"], answer: "Substance W", hint_en: "Remember the key properties of metals, like being malleable and a good conductor.", hint_th: "จำสมบัติสำคัญของโลหะ เช่น การตีเป็นแผ่นได้และการนำไฟฟ้าที่ดี", visual: 'propertiesTable' },
+    { section: "Application and Analysis", question: "Substance Y has properties of both metals and non-metals. What is it?", options: ["A compound", "A metalloid", "A solution", "A liquid"], answer: "A metalloid", hint_en: "What do we call elements that are in-between metals and non-metals?", hint_th: "เราเรียกธาตุที่อยู่ระหว่างโลหะกับอโลหะว่าอะไร", visual: 'propertiesTable' },
+];
+
+const visuals = {
+    statesOfMatter: `<div class="flex flex-col sm:flex-row gap-4 justify-center items-center w-full"><div class="text-center"><h4 class="font-semibold mb-2">Solid</h4><div class="w-24 h-24 bg-blue-100 border-2 border-blue-300 rounded-lg flex flex-wrap items-center justify-center p-2 gap-1">${Array(25).fill('<div class="w-3 h-3 bg-blue-500 rounded-full"></div>').join('')}</div></div><div class="text-center"><h4 class="font-semibold mb-2">Liquid</h4><div class="w-24 h-24 bg-blue-100 border-2 border-blue-300 rounded-lg relative">${Array(20).fill(0).map(() => `<div class="w-3 h-3 bg-blue-500 rounded-full absolute" style="top:${Math.random()*80+5}%; left:${Math.random()*80+5}%"></div>`).join('')}</div></div><div class="text-center"><h4 class="font-semibold mb-2">Gas</h4><div class="w-24 h-24 bg-blue-100 border-2 border-blue-300 rounded-lg relative">${Array(8).fill(0).map(() => `<div class="w-3 h-3 bg-blue-500 rounded-full absolute" style="top:${Math.random()*80+5}%; left:${Math.random()*80+5}%"></div>`).join('')}</div></div></div>`,
+    condensation: `<div class="relative"><div style="width:100px; height:150px; background-color:#e0f2fe; border:3px solid #7dd3fc; clip-path: polygon(0 0, 100% 0, 90% 100%, 10% 100%);" class="mx-auto"></div><div style="position:absolute; top:50%; left:50%; transform:translate(-140%, 0); font-size:0.8rem;">Water vapor<br>(from air)</div><div style="position:absolute; top:60%; left:50%; transform:translate(40%, 0); font-size:0.8rem;">Water droplets</div>${Array(5).fill(0).map((_,i) => `<div class="absolute w-2 h-3 bg-blue-500 rounded-full" style="top:${60+i*5}%; left:${48+Math.random()*4}%"></div>`).join('')}</div>`,
+    nucleus: `<div class="w-48 h-48 bg-red-200 rounded-full flex items-center justify-center border-4 border-red-300"><div class="w-20 h-20 bg-indigo-300 rounded-full flex items-center justify-center border-4 border-indigo-400"><span class="font-bold text-indigo-800">Nucleus</span></div></div>`,
+    animalCell: `<div class="text-center"><p class="font-bold mb-2">Animal Cell</p><div class="w-48 h-48 bg-red-200 rounded-full relative border-4 border-red-300"><div class="absolute w-16 h-16 bg-indigo-300 rounded-full top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"></div><div class="absolute w-2 h-2 bg-gray-700 rounded-full" style="top:30%; left:30%"></div><div class="absolute w-2 h-2 bg-gray-700 rounded-full" style="top:70%; left:20%"></div><div class="absolute w-12 h-6 bg-yellow-300 rounded-full" style="top:20%; left:40%"></div></div></div>`,
+    plantCell: `<div class="text-center"><p class="font-bold mb-2">Plant Cell</p><div class="w-56 h-40 bg-green-200 rounded-lg relative border-4 border-green-400"><div class="absolute w-32 h-20 bg-blue-200 rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"><span class="text-sm font-semibold">Vacuole</span></div></div></div>`,
+    periodicTable: `<div class="grid grid-cols-4 gap-1 p-2 bg-gray-200 rounded-lg w-48"><div class="bg-blue-300 p-2 text-center rounded">Me</div><div class="bg-red-300 p-2 text-center rounded col-span-2">Non-Metals</div><div class="bg-gray-400 p-2 text-center rounded"></div><div class="bg-blue-300 p-2 text-center rounded">ta</div><div class="bg-yellow-300 p-2 text-center rounded">Met</div><div class="bg-red-300 p-2 text-center rounded">al</div><div class="bg-red-300 p-2 text-center rounded">lo</div><div class="bg-blue-300 p-2 text-center rounded">ls</div><div class="bg-yellow-300 p-2 text-center rounded">ids</div><div class="bg-red-300 p-2 text-center rounded"></div></div>`,
+    plantVsAnimal: `<div class="flex gap-4 items-center"><div class="text-center"><div class="w-32 h-40 bg-green-200 rounded-lg border-4 border-green-400"></div><p class="font-semibold mt-2">Plant Cell</p></div><div class="text-center"><div class="w-32 h-32 bg-red-200 rounded-full border-4 border-red-300"></div><p class="font-semibold mt-2">Animal Cell</p></div></div>`,
+    suspension: `<div class="relative"><div style="width:120px; height:150px; border:3px solid #9ca3af;" class="bg-blue-100 flex flex-col justify-between"><div class="flex-grow"></div><div style="height:30%;" class="bg-yellow-800 opacity-60"></div></div><p class="absolute bottom-2 left-1/2 -translate-x-1/2 bg-white px-2 rounded font-semibold">Settled Particles</p></div>`,
+    chloroplast: `<div class="text-center"><p class="font-bold mb-2">Plant Cell</p><div class="w-56 h-40 bg-green-200 rounded-lg relative border-4 border-green-400">${Array(5).fill(0).map(() => `<div class="absolute w-8 h-5 bg-green-600 rounded-full" style="top:${Math.random()*70+10}%; left:${Math.random()*70+10}%"></div>`).join('')}<p class="absolute top-2 left-2 text-sm font-bold">Chloroplasts</p></div></div>`,
+    tyndall: `<div class="flex items-center gap-2"><div class="text-2xl">🔦</div><div class="text-center"><div class="w-24 h-32 bg-blue-100 border-2 border-blue-300"></div><p class="font-semibold text-sm">Solution</p></div><div class="text-center"><div class="w-24 h-32 bg-blue-100 border-2 border-blue-300 relative overflow-hidden"><div class="absolute top-1/2 -translate-y-1/2 h-4 w-full bg-yellow-300 opacity-80"></div></div><p class="font-semibold text-sm">Colloid</p></div></div>`,
+    sublimation: `<div class="relative text-center"><p class="font-bold text-lg">Gas</p><svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-indigo-500 mx-auto my-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" /></svg><div class="w-24 h-12 bg-indigo-200 border-2 border-indigo-400 rounded-lg mx-auto"></div><p class="font-bold text-lg mt-2">Solid</p></div>`,
+    boilingGraph: `<canvas id="boilingChartCanvas"></canvas>`,
+    propertiesTable: `<div class="w-full overflow-x-auto"><table class="w-full text-sm text-left text-gray-500">
+        <thead class="text-xs text-gray-700 uppercase bg-gray-200"><tr><th scope="col" class="px-4 py-2">Substance</th><th scope="col" class="px-4 py-2">Malleability</th><th scope="col" class="px-4 py-2">Conductivity</th><th scope="col" class="px-4 py-2">State</th></tr></thead>
+        <tbody>
+            <tr class="bg-white border-b"><th class="px-4 py-2 font-medium text-gray-900">W</th><td class="px-4 py-2">Yes</td><td class="px-4 py-2">Good</td><td class="px-4 py-2">Solid</td></tr>
+            <tr class="bg-gray-50 border-b"><th class="px-4 py-2 font-medium text-gray-900">X</th><td class="px-4 py-2">No (Brittle)</td><td class="px-4 py-2">Poor</td><td class="px-4 py-2">Solid</td></tr>
+            <tr class="bg-white border-b"><th class="px-4 py-2 font-medium text-gray-900">Y</th><td class="px-4 py-2">No (Brittle)</td><td class="px-4 py-2">Good at high temp.</td><td class="px-4 py-2">Solid</td></tr>
+            <tr class="bg-gray-50"><th class="px-4 py-2 font-medium text-gray-900">Z</th><td class="px-4 py-2">N/A</td><td class="px-4 py-2">Poor</td><td class="px-4 py-2">Gas</td></tr>
+        </tbody></table></div>`,
+    textOnly: `<div class="flex items-center justify-center h-full"><p class="text-gray-500 text-lg italic">Read the question carefully.</p></div>`
+};
+
+// --- QUIZ LOGIC ---
+const startBtn = document.getElementById('start-btn');
+const restartBtn = document.getElementById('restart-btn');
+const nextBtn = document.getElementById('next-btn');
+
+const startScreen = document.getElementById('start-screen');
+const quizContainer = document.getElementById('quiz-container');
+const resultsScreen = document.getElementById('results-screen');
+
+const questionCounter = document.getElementById('question-counter');
+const sectionTitle = document.getElementById('section-title');
+const progressBarInner = document.getElementById('progress-bar-inner');
+const visualContainer = document.getElementById('visual-container');
+const questionText = document.getElementById('question-text');
+const optionsContainer = document.getElementById('options-container');
+const hintEn = document.getElementById('hint-en');
+const hintTh = document.getElementById('hint-th');
+const finalScore = document.getElementById('final-score');
+const scoreMessage = document.getElementById('score-message');
+
+let currentQuestionIndex = 0;
+let score = 0;
+let chartInstance = null;
+
+function startQuiz() {
+    currentQuestionIndex = 0;
+    score = 0;
+    startScreen.classList.add('hidden');
+    resultsScreen.classList.add('hidden');
+    quizContainer.classList.remove('hidden');
+    nextBtn.classList.add('hidden');
+    showQuestion();
+}
+
+function showQuestion() {
+    resetState();
+    const currentQuestion = quizData[currentQuestionIndex];
+
+    // Update UI elements
+    questionCounter.innerText = `Question ${currentQuestionIndex + 1}/${quizData.length}`;
+    sectionTitle.innerText = currentQuestion.section;
+    progressBarInner.style.width = `${((currentQuestionIndex + 1) / quizData.length) * 100}%`;
+    questionText.innerHTML = currentQuestion.question;
+    hintEn.innerText = currentQuestion.hint_en;
+    hintTh.innerText = currentQuestion.hint_th;
+
+    // Display visual
+    visualContainer.innerHTML = visuals[currentQuestion.visual] || visuals['textOnly'];
+    if (currentQuestion.visual === 'boilingGraph') {
+        renderBoilingChart();
+    }
+    
+    // Create option buttons
+    currentQuestion.options.forEach(option => {
+        const button = document.createElement('button');
+        button.innerText = option;
+        button.classList.add('option-btn', 'w-full', 'p-4', 'text-left', 'bg-white', 'border-2', 'border-gray-300', 'rounded-lg', 'hover:bg-indigo-50', 'hover:border-indigo-400');
+        button.addEventListener('click', selectAnswer);
+        optionsContainer.appendChild(button);
+    });
+}
+
+function resetState() {
+    nextBtn.classList.add('hidden');
+    while (optionsContainer.firstChild) {
+        optionsContainer.removeChild(optionsContainer.firstChild);
+    }
+    if (chartInstance) {
+        chartInstance.destroy();
+        chartInstance = null;
+    }
+}
+
+function selectAnswer(e) {
+    const selectedBtn = e.target;
+    const correct = selectedBtn.innerText === quizData[currentQuestionIndex].answer;
+
+    if (correct) {
+        score++;
+        selectedBtn.classList.add('correct');
+    } else {
+        selectedBtn.classList.add('incorrect');
+    }
+
+    // Show correct answer and disable all buttons
+    Array.from(optionsContainer.children).forEach(button => {
+        if (button.innerText === quizData[currentQuestionIndex].answer) {
+            button.classList.add('correct');
+        }
+        button.disabled = true;
+    });
+
+    nextBtn.classList.remove('hidden');
+}
+
+function showNextQuestion() {
+    currentQuestionIndex++;
+    if (currentQuestionIndex < quizData.length) {
+        showQuestion();
+    } else {
+        showResults();
+    }
+}
+
+function showResults() {
+    quizContainer.classList.add('hidden');
+    resultsScreen.classList.remove('hidden');
+    finalScore.innerText = `${score}/${quizData.length}`;
+
+    const percentage = (score / quizData.length) * 100;
+    if (percentage >= 80) {
+        scoreMessage.innerText = "Excellent work! You've mastered the concepts.";
+    } else if (percentage >= 60) {
+        scoreMessage.innerText = "Good job! A little more review will make you an expert.";
+    } else {
+        scoreMessage.innerText = "Keep practicing! Review the questions and try again.";
+    }
+}
+
+function renderBoilingChart() {
+    const ctx = document.getElementById('boilingChartCanvas').getContext('2d');
+    chartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['0', '2', '4', '6', '8', '10', '12', '14'],
+            datasets: [{
+                label: 'Liquid A (Pure Substance)',
+                data: [20, 60, 100, 100, 100, 100, 120, 140],
+                borderColor: 'rgb(59, 130, 246)',
+                borderWidth: 3,
+                tension: 0.1
+            }, {
+                label: 'Liquid B (Mixture)',
+                data: [20, 60, 102, 103, 104, 105, 106, 107],
+                borderColor: 'rgb(239, 68, 68)',
+                borderWidth: 3,
+                tension: 0.1,
+                borderDash: [5, 5]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: { display: true, text: 'Heating Curve of Two Liquids' }
+            },
+            scales: {
+                x: { title: { display: true, text: 'Time (minutes)' } },
+                y: { title: { display: true, text: 'Temperature (°C)' }, beginAtZero: true }
+            }
+        }
+    });
+}
+
+
+// Event Listeners
+startBtn.addEventListener('click', startQuiz);
+nextBtn.addEventListener('click', showNextQuestion);
+restartBtn.addEventListener('click', startQuiz);
+
+</script>
+</body>
+</html>
